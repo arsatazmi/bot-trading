@@ -12,6 +12,7 @@ import { BotLogStream } from './components/BotLogStream.jsx';
 import { StrategyConfigModal } from './components/StrategyConfigModal.jsx';
 import { ExchangeSettingsModal } from './components/ExchangeSettingsModal.jsx';
 import { ManualOrderModal } from './components/ManualOrderModal.jsx';
+import { clientEngine } from './services/clientBotEngine.js';
 
 import {
   fetchState,
@@ -26,35 +27,45 @@ import {
   placeManualOrder,
   closePosition,
   panicCloseAll,
-  resetPaperAccount
+  resetPaperAccount,
+  getIsClientEngineMode
 } from './services/api.js';
 
 export function App() {
   const [appState, setAppState] = useState(null);
   const [loading, setLoading] = useState(true);
   const [candles, setCandles] = useState([]);
-  const [activeTab, setActiveTab] = useState('positions'); // 'positions' | 'history' | 'logs'
+  const [activeTab, setActiveTab] = useState('positions');
 
   // Modals
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
   const [manualOrderModalOpen, setManualOrderModalOpen] = useState(false);
 
-  // Active Symbol & Ticker ref
   const activeSymbolRef = useRef('BTC/USDT');
 
-  // Initial State Fetch
+  // Initial State Load
   useEffect(() => {
     async function loadInitial() {
       try {
         const res = await fetchState();
-        if (res.success && res.data) {
+        if (res && res.data) {
           setAppState(res.data);
           activeSymbolRef.current = res.data.activeSymbol;
           setCandles(res.data.candles || []);
+        } else {
+          // Fallback to clientEngine directly
+          const fallback = clientEngine.getFullState();
+          setAppState(fallback);
+          activeSymbolRef.current = fallback.activeSymbol;
+          setCandles(fallback.candles || []);
         }
       } catch (err) {
-        console.error('Failed to load initial state:', err);
+        console.warn('Backend unavailable, using client engine:', err);
+        const fallback = clientEngine.getFullState();
+        setAppState(fallback);
+        activeSymbolRef.current = fallback.activeSymbol;
+        setCandles(fallback.candles || []);
       } finally {
         setLoading(false);
       }
@@ -62,109 +73,134 @@ export function App() {
     loadInitial();
   }, []);
 
-  // Server-Sent Events (SSE) Live Stream
+  // Real-Time Event Streaming (SSE with Client-Engine fallback)
   useEffect(() => {
-    const eventSource = new EventSource('/api/stream');
+    let eventSource = null;
+    let fallbackCleanup = null;
 
-    eventSource.addEventListener('tick', (e) => {
-      try {
-        const tickData = JSON.parse(e.data);
+    const handleTickUpdate = (tickData) => {
+      setAppState(prev => {
+        if (!prev) return prev;
+        const activeSym = prev.activeSymbol;
+        const activeTick = tickData.ticks[activeSym];
 
-        setAppState(prev => {
-          if (!prev) return prev;
-          const activeSym = prev.activeSymbol;
-          const activeTick = tickData.ticks[activeSym];
-
-          // Update snapshots
-          const updatedSnapshots = { ...prev.allSnapshots };
-          for (const [sym, tick] of Object.entries(tickData.ticks)) {
-            updatedSnapshots[sym] = {
-              ...(updatedSnapshots[sym] || {}),
-              currentPrice: tick.price,
-              change24h: tick.change24h,
-              high24h: tick.high24h,
-              low24h: tick.low24h,
-              volume24h: tick.volume24h,
-              orderBook: tick.orderBook
-            };
-          }
-
-          return {
-            ...prev,
-            status: tickData.status,
-            mode: tickData.mode,
-            portfolio: tickData.portfolio,
-            allSnapshots: updatedSnapshots
+        const updatedSnapshots = { ...prev.allSnapshots };
+        for (const [sym, tick] of Object.entries(tickData.ticks)) {
+          updatedSnapshots[sym] = {
+            ...(updatedSnapshots[sym] || {}),
+            currentPrice: tick.price,
+            change24h: tick.change24h,
+            high24h: tick.high24h,
+            low24h: tick.low24h,
+            volume24h: tick.volume24h,
+            orderBook: tick.orderBook
           };
-        });
-
-        // Update current candles for active symbol
-        if (tickData.ticks[activeSymbolRef.current]) {
-          const currentCandle = tickData.ticks[activeSymbolRef.current].candle;
-          setCandles(prevCandles => {
-            if (!prevCandles || prevCandles.length === 0) return prevCandles;
-            const lastCandle = prevCandles[prevCandles.length - 1];
-
-            if (lastCandle.time === currentCandle.time) {
-              // Update last candle in-place
-              return [...prevCandles.slice(0, -1), currentCandle];
-            } else if (currentCandle.time > lastCandle.time) {
-              // Append new candle
-              return [...prevCandles.slice(-180), currentCandle];
-            }
-            return prevCandles;
-          });
         }
-      } catch (err) {
-        console.error('SSE tick parse error:', err);
-      }
-    });
 
-    eventSource.addEventListener('log', (e) => {
-      try {
-        const newLog = JSON.parse(e.data);
-        setAppState(prev => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            logs: [newLog, ...(prev.logs || [])].slice(0, 100)
-          };
-        });
-      } catch (err) {
-        console.error('SSE log parse error:', err);
-      }
-    });
+        return {
+          ...prev,
+          status: tickData.status,
+          mode: tickData.mode,
+          portfolio: tickData.portfolio,
+          allSnapshots: updatedSnapshots
+        };
+      });
 
-    eventSource.addEventListener('marker', (e) => {
-      try {
-        const newMarker = JSON.parse(e.data);
-        setAppState(prev => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            tradeMarkers: [...(prev.tradeMarkers || []), newMarker].slice(-80)
-          };
+      if (tickData.ticks && tickData.ticks[activeSymbolRef.current]) {
+        const currentCandle = tickData.ticks[activeSymbolRef.current].candle;
+        setCandles(prevCandles => {
+          if (!prevCandles || prevCandles.length === 0) return [currentCandle];
+          const lastCandle = prevCandles[prevCandles.length - 1];
+
+          if (lastCandle.time === currentCandle.time) {
+            return [...prevCandles.slice(0, -1), currentCandle];
+          } else if (currentCandle.time > lastCandle.time) {
+            return [...prevCandles.slice(-180), currentCandle];
+          }
+          return prevCandles;
         });
-      } catch (err) {
-        console.error('SSE marker parse error:', err);
       }
-    });
+    };
+
+    const handleLogUpdate = (newLog) => {
+      setAppState(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          logs: [newLog, ...(prev.logs || [])].slice(0, 100)
+        };
+      });
+    };
+
+    const handleMarkerUpdate = (newMarker) => {
+      setAppState(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          tradeMarkers: [...(prev.tradeMarkers || []), newMarker].slice(-80)
+        };
+      });
+    };
+
+    const setupClientListeners = () => {
+      clientEngine.tickListeners.push(handleTickUpdate);
+      clientEngine.logListeners.push(handleLogUpdate);
+      clientEngine.markerListeners.push(handleMarkerUpdate);
+
+      fallbackCleanup = () => {
+        clientEngine.tickListeners = clientEngine.tickListeners.filter(l => l !== handleTickUpdate);
+        clientEngine.logListeners = clientEngine.logListeners.filter(l => l !== handleLogUpdate);
+        clientEngine.markerListeners = clientEngine.markerListeners.filter(l => l !== handleMarkerUpdate);
+      };
+    };
+
+    if (getIsClientEngineMode()) {
+      setupClientListeners();
+    } else {
+      try {
+        eventSource = new EventSource('/api/stream');
+
+        eventSource.addEventListener('tick', (e) => {
+          try {
+            handleTickUpdate(JSON.parse(e.data));
+          } catch (err) {}
+        });
+
+        eventSource.addEventListener('log', (e) => {
+          try {
+            handleLogUpdate(JSON.parse(e.data));
+          } catch (err) {}
+        });
+
+        eventSource.addEventListener('marker', (e) => {
+          try {
+            handleMarkerUpdate(JSON.parse(e.data));
+          } catch (err) {}
+        });
+
+        eventSource.onerror = () => {
+          if (eventSource) eventSource.close();
+          setupClientListeners();
+        };
+      } catch (err) {
+        setupClientListeners();
+      }
+    }
 
     return () => {
-      eventSource.close();
+      if (eventSource) eventSource.close();
+      if (fallbackCleanup) fallbackCleanup();
     };
   }, []);
 
-  // Symbol Change Handler
   const handleSelectSymbol = async (symbol) => {
     activeSymbolRef.current = symbol;
     try {
       const res = await setBotSymbol(symbol);
       if (res.success) {
         setAppState(prev => ({ ...prev, activeSymbol: symbol }));
-        // Fetch fresh candles for new symbol
         const candleRes = await fetchCandles(symbol, 180);
-        if (candleRes.success) {
+        if (candleRes && candleRes.candles) {
           setCandles(candleRes.candles);
         }
       }
@@ -173,11 +209,10 @@ export function App() {
     }
   };
 
-  // Bot Lifecycle Handlers
   const handleStart = async () => {
     try {
       const res = await startBot();
-      if (res.success) {
+      if (res && res.success) {
         setAppState(prev => ({ ...prev, status: 'RUNNING' }));
       }
     } catch (err) {
@@ -188,7 +223,7 @@ export function App() {
   const handlePause = async () => {
     try {
       const res = await pauseBot();
-      if (res.success) {
+      if (res && res.success) {
         setAppState(prev => ({ ...prev, status: 'PAUSED' }));
       }
     } catch (err) {
@@ -199,7 +234,7 @@ export function App() {
   const handleStop = async () => {
     try {
       const res = await stopBot();
-      if (res.success) {
+      if (res && res.success) {
         setAppState(prev => ({ ...prev, status: 'STOPPED' }));
       }
     } catch (err) {
@@ -210,7 +245,7 @@ export function App() {
   const handleSelectMode = async (mode) => {
     try {
       const res = await setBotMode(mode);
-      if (res.success) {
+      if (res && res.success) {
         setAppState(prev => ({ ...prev, mode }));
       }
     } catch (err) {
@@ -221,7 +256,7 @@ export function App() {
   const handleSelectStrategy = async (strategyKey) => {
     try {
       const res = await setBotStrategy(strategyKey);
-      if (res.success) {
+      if (res && res.success) {
         setAppState(prev => ({ ...prev, activeStrategyKey: strategyKey }));
       }
     } catch (err) {
@@ -232,7 +267,7 @@ export function App() {
   const handleSetSpeed = async (speed) => {
     try {
       const res = await setSimulationSpeed(speed);
-      if (res.success) {
+      if (res && res.success) {
         setAppState(prev => ({ ...prev, speedMultiplier: speed }));
       }
     } catch (err) {
@@ -243,7 +278,7 @@ export function App() {
   const handleSaveStrategyConfig = async (strategyKey, config) => {
     try {
       const res = await setBotStrategy(strategyKey, config);
-      if (res.success) {
+      if (res && res.success) {
         setAppState(prev => ({
           ...prev,
           activeStrategyKey: strategyKey,
@@ -297,7 +332,7 @@ export function App() {
     return (
       <div className="min-h-screen bg-[#0b0e14] flex flex-col items-center justify-center text-slate-300">
         <div className="h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <span className="font-semibold text-sm">Memuat AutoTrade Pro Engine...</span>
+        <span className="font-semibold text-sm">Menyiapkan AutoTrade Pro Engine...</span>
       </div>
     );
   }
