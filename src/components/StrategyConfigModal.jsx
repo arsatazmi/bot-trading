@@ -1,6 +1,6 @@
 // src/components/StrategyConfigModal.jsx
 import React, { useState, useEffect } from 'react';
-import { X, Save, Sliders, Info, Check } from 'lucide-react';
+import { X, Save, Sliders, Check } from 'lucide-react';
 
 export function StrategyConfigModal({
   isOpen,
@@ -39,31 +39,33 @@ export function StrategyConfigModal({
     setTimeout(() => {
       setSaveSuccess(false);
       onClose();
-    }, 700);
+    }, 600);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-      <div className="bg-[#121721] border border-[#1f293d] rounded-2xl w-full max-w-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+      <div className="bg-[#0e1422] border border-white/[0.08] rounded-2xl w-full max-w-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f293d] bg-[#161c28]">
-          <div className="flex items-center gap-2">
-            <Sliders className="h-5 w-5 text-blue-400" />
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06] bg-[#121929]">
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
+              <Sliders className="h-4 w-4" />
+            </div>
             <div>
-              <h3 className="font-bold text-base text-white">Konfigurasi Parameter Strategi</h3>
-              <p className="text-xs text-slate-400">Sesuaikan indikator teknis & manajemen resiko</p>
+              <h3 className="font-bold text-sm text-white">Parameter Strategi & Resiko</h3>
+              <p className="text-[11px] text-slate-400">Atur batas teknis dan toleransi keuntungan/kerugian</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#1f293d] transition-colors"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.05] transition-colors"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Strategy Tabs */}
-        <div className="flex border-b border-[#1f293d] bg-[#0f141f] px-6 gap-2 pt-2">
+        <div className="flex border-b border-white/[0.06] bg-[#090d16] px-6 gap-2 pt-2">
           {[
             { key: 'rsi_ema', label: 'RSI + EMA Trend' },
             { key: 'grid', label: 'Grid Trading' },
@@ -73,9 +75,9 @@ export function StrategyConfigModal({
             <button
               key={tab.key}
               onClick={() => setSelectedKey(tab.key)}
-              className={`px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors border-b-2 ${
+              className={`px-3.5 py-2 text-xs font-bold rounded-t-xl transition-all border-b-2 ${
                 selectedKey === tab.key
-                  ? 'border-blue-500 text-blue-400 bg-[#121721]'
+                  ? 'border-blue-500 text-blue-400 bg-[#0e1422]'
                   : 'border-transparent text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -91,108 +93,108 @@ export function StrategyConfigModal({
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">RSI Period</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">RSI Period</label>
                   <input
                     type="number"
                     min="2"
                     max="50"
                     value={formData.rsiPeriod || 14}
                     onChange={e => handleChange('rsiPeriod', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">RSI Oversold (Beli)</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">RSI Oversold (Beli)</label>
                   <input
                     type="number"
                     min="10"
                     max="50"
-                    value={formData.rsiOversold || 30}
+                    value={formData.rsiOversold || 32}
                     onChange={e => handleChange('rsiOversold', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">RSI Overbought (Jual)</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">RSI Overbought (Jual)</label>
                   <input
                     type="number"
                     min="50"
                     max="90"
-                    value={formData.rsiOverbought || 70}
+                    value={formData.rsiOverbought || 68}
                     onChange={e => handleChange('rsiOverbought', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Trade Amount ($ USD)</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Trade Amount ($ USD)</label>
                   <input
                     type="number"
                     min="50"
                     step="50"
                     value={formData.tradeAmountUSD || 500}
                     onChange={e => handleChange('tradeAmountUSD', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Fast EMA Period</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Fast EMA Period</label>
                   <input
                     type="number"
                     min="3"
                     max="50"
                     value={formData.emaFastPeriod || 9}
                     onChange={e => handleChange('emaFastPeriod', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Slow EMA Period</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Slow EMA Period</label>
                   <input
                     type="number"
                     min="10"
                     max="200"
                     value={formData.emaSlowPeriod || 21}
                     onChange={e => handleChange('emaSlowPeriod', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 pt-2 border-t border-[#1f293d]">
+              <div className="grid grid-cols-3 gap-3 pt-2 border-t border-white/[0.06]">
                 <div>
-                  <label className="text-xs text-emerald-400 font-medium block mb-1">Take Profit (%)</label>
+                  <label className="text-[11px] font-semibold text-emerald-400 block mb-1">Take Profit (%)</label>
                   <input
                     type="number"
                     step="0.5"
-                    value={formData.takeProfitPercent || 3.5}
+                    value={formData.takeProfitPercent || 4.0}
                     onChange={e => handleChange('takeProfitPercent', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-emerald-400 font-mono font-bold"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-rose-400 font-medium block mb-1">Stop Loss (%)</label>
+                  <label className="text-[11px] font-semibold text-rose-400 block mb-1">Stop Loss (%)</label>
                   <input
                     type="number"
                     step="0.5"
-                    value={formData.stopLossPercent || 2.0}
+                    value={formData.stopLossPercent || 2.5}
                     onChange={e => handleChange('stopLossPercent', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-rose-400 font-mono font-bold"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-blue-400 font-medium block mb-1">Trailing Stop (%)</label>
+                  <label className="text-[11px] font-semibold text-blue-400 block mb-1">Trailing Stop (%)</label>
                   <input
                     type="number"
                     step="0.5"
                     value={formData.trailingStopPercent || 1.5}
                     onChange={e => handleChange('trailingStopPercent', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-blue-400 font-mono font-bold"
                   />
                 </div>
               </div>
@@ -204,7 +206,7 @@ export function StrategyConfigModal({
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Rentang Range (± %)</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Rentang Range (± %)</label>
                   <input
                     type="number"
                     step="0.5"
@@ -212,51 +214,51 @@ export function StrategyConfigModal({
                     max="20"
                     value={formData.rangePercent || 4.0}
                     onChange={e => handleChange('rangePercent', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Jumlah Tingkat Grid</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Jumlah Grid</label>
                   <input
                     type="number"
                     min="3"
                     max="20"
                     value={formData.gridCount || 6}
                     onChange={e => handleChange('gridCount', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Order per Grid ($)</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Order per Grid ($)</label>
                   <input
                     type="number"
                     step="50"
                     value={formData.orderAmountUSD || 250}
                     onChange={e => handleChange('orderAmountUSD', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-emerald-400 font-medium block mb-1">TP per Grid (%)</label>
+                  <label className="text-[11px] font-semibold text-emerald-400 block mb-1">TP per Grid (%)</label>
                   <input
                     type="number"
                     step="0.5"
                     value={formData.takeProfitPercent || 1.5}
                     onChange={e => handleChange('takeProfitPercent', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-emerald-400 font-mono font-bold"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-rose-400 font-medium block mb-1">Stop Loss Range (%)</label>
+                  <label className="text-[11px] font-semibold text-rose-400 block mb-1">SL Range (%)</label>
                   <input
                     type="number"
                     step="0.5"
                     value={formData.stopLossPercent || 5.0}
                     onChange={e => handleChange('stopLossPercent', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-rose-400 font-mono font-bold"
                   />
                 </div>
               </div>
@@ -268,72 +270,70 @@ export function StrategyConfigModal({
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Base Order ($)</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Base Order ($)</label>
                   <input
                     type="number"
                     step="50"
                     value={formData.baseOrderUSD || 300}
                     onChange={e => handleChange('baseOrderUSD', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Safety Order ($)</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Safety Order ($)</label>
                   <input
                     type="number"
                     step="50"
                     value={formData.safetyOrderUSD || 300}
                     onChange={e => handleChange('safetyOrderUSD', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Maks. Safety Orders</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Max Safety Orders</label>
                   <input
                     type="number"
                     min="1"
                     max="10"
                     value={formData.maxSafetyOrders || 4}
                     onChange={e => handleChange('maxSafetyOrders', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Step Penurunan Harga (%)</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Step Penurunan (%)</label>
                   <input
                     type="number"
                     step="0.5"
                     value={formData.priceDropStepPercent || 1.5}
                     onChange={e => handleChange('priceDropStepPercent', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Volume Scale (Multiplier)</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Volume Multiplier</label>
                   <input
                     type="number"
                     step="0.1"
-                    min="1.0"
-                    max="2.5"
                     value={formData.volumeScale || 1.2}
                     onChange={e => handleChange('volumeScale', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-emerald-400 font-medium block mb-1">Target TP Rata-rata (%)</label>
+                  <label className="text-[11px] font-semibold text-emerald-400 block mb-1">Target TP (%)</label>
                   <input
                     type="number"
                     step="0.5"
                     value={formData.takeProfitPercent || 2.5}
                     onChange={e => handleChange('takeProfitPercent', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-emerald-400 font-mono font-bold"
                   />
                 </div>
               </div>
@@ -345,63 +345,63 @@ export function StrategyConfigModal({
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Fast Period</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Fast Period</label>
                   <input
                     type="number"
                     value={formData.fastPeriod || 12}
                     onChange={e => handleChange('fastPeriod', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Slow Period</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Slow Period</label>
                   <input
                     type="number"
                     value={formData.slowPeriod || 26}
                     onChange={e => handleChange('slowPeriod', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Signal Period</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Signal Period</label>
                   <input
                     type="number"
                     value={formData.signalPeriod || 9}
                     onChange={e => handleChange('signalPeriod', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-xs text-slate-300 font-medium block mb-1">Trade Amount ($)</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Amount ($)</label>
                   <input
                     type="number"
                     step="50"
                     value={formData.tradeAmountUSD || 500}
                     onChange={e => handleChange('tradeAmountUSD', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-emerald-400 font-medium block mb-1">TP (%)</label>
+                  <label className="text-[11px] font-semibold text-emerald-400 block mb-1">TP (%)</label>
                   <input
                     type="number"
                     step="0.5"
                     value={formData.takeProfitPercent || 3.5}
                     onChange={e => handleChange('takeProfitPercent', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-emerald-400 font-mono font-bold"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-rose-400 font-medium block mb-1">SL (%)</label>
+                  <label className="text-[11px] font-semibold text-rose-400 block mb-1">SL (%)</label>
                   <input
                     type="number"
                     step="0.5"
                     value={formData.stopLossPercent || 2.0}
                     onChange={e => handleChange('stopLossPercent', e.target.value)}
-                    className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-xs text-rose-400 font-mono font-bold"
                   />
                 </div>
               </div>
@@ -409,27 +409,27 @@ export function StrategyConfigModal({
           )}
 
           {/* Action buttons */}
-          <div className="pt-4 border-t border-[#1f293d] flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-white/[0.06] flex items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-[#161c28] transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/[0.05] transition-colors"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 transition-all"
+              className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 transition-all active:scale-95"
             >
               {saveSuccess ? (
                 <>
                   <Check className="h-4 w-4 text-emerald-300" />
-                  Tersimpan!
+                  <span>Tersimpan!</span>
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  Simpan & Terapkan
+                  <span>Simpan & Terapkan</span>
                 </>
               )}
             </button>

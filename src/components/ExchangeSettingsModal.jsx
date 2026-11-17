@@ -1,6 +1,6 @@
 // src/components/ExchangeSettingsModal.jsx
 import React, { useState } from 'react';
-import { X, Key, ShieldCheck, AlertTriangle, Eye, EyeOff, CheckCircle2, RefreshCw } from 'lucide-react';
+import { X, KeyRound, ShieldCheck, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { saveExchangeConfig, testExchangeConnection } from '../services/api.js';
 
 export function ExchangeSettingsModal({
@@ -27,11 +27,11 @@ export function ExchangeSettingsModal({
     setFeedback(null);
     try {
       const res = await saveExchangeConfig({ exchange, apiKey, apiSecret, isTestnet });
-      if (res.success) {
+      if (res && res.success) {
         setFeedback({ type: 'success', message: 'Kredensial API Exchange berhasil disimpan!' });
         if (onConfigSaved) onConfigSaved(res);
       } else {
-        setFeedback({ type: 'error', message: res.error || 'Gagal menyimpan konfigurasi.' });
+        setFeedback({ type: 'error', message: res?.error || 'Gagal menyimpan konfigurasi.' });
       }
     } catch (err) {
       setFeedback({ type: 'error', message: err.message });
@@ -45,13 +45,13 @@ export function ExchangeSettingsModal({
     setFeedback(null);
     try {
       const res = await testExchangeConnection();
-      if (res.success) {
+      if (res && res.success) {
         setFeedback({
           type: 'success',
-          message: `${res.message} Saldo USDT: $${res.usdtBalance.toFixed(2)}`
+          message: `${res.message} Saldo USDT: $${(res.usdtBalance || 0).toFixed(2)}`
         });
       } else {
-        setFeedback({ type: 'error', message: res.error });
+        setFeedback({ type: 'error', message: res?.error || 'Gagal terhubung.' });
       }
     } catch (err) {
       setFeedback({ type: 'error', message: err.message });
@@ -61,39 +61,40 @@ export function ExchangeSettingsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-      <div className="bg-[#121721] border border-[#1f293d] rounded-2xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+      <div className="bg-[#0e1422] border border-white/[0.08] rounded-2xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f293d] bg-[#161c28]">
-          <div className="flex items-center gap-2">
-            <Key className="h-5 w-5 text-amber-400" />
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06] bg-[#121929]">
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 border border-amber-500/20">
+              <KeyRound className="h-4 w-4" />
+            </div>
             <div>
-              <h3 className="font-bold text-base text-white">Integrasi Live Exchange API</h3>
-              <p className="text-xs text-slate-400">Hubungkan bot ke bursa kripto riil</p>
+              <h3 className="font-bold text-sm text-white">Integrasi Exchange API</h3>
+              <p className="text-[11px] text-slate-400">Hubungkan bot ke bursa kripto riil</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#1f293d] transition-colors"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.05] transition-colors"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Security Notice */}
-        <div className="p-4 mx-6 mt-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-start gap-3">
+        {/* Security Warning */}
+        <div className="p-3.5 mx-6 mt-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-start gap-3">
           <ShieldCheck className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
-          <div className="leading-relaxed">
-            <span className="font-semibold block mb-0.5">Panduan Keamanan API Key:</span>
-            Hanya berikan izin <strong>Read</strong> dan <strong>Spot Trading</strong>. <strong>JANGAN PERNAH</strong> mencentang izin "Withdrawal" (Penarikan Dana) pada API Key exchange Anda!
+          <div className="leading-relaxed text-[11px]">
+            <span className="font-bold block mb-0.5">Panduan Keamanan:</span>
+            Hanya izinkan izin <strong>Read</strong> dan <strong>Spot Trading</strong>. JANGAN PERNAH mengaktifkan opsi <strong>Withdrawal (Penarikan Dana)</strong>!
           </div>
         </div>
 
-        {/* Form */}
+        {/* Form Body */}
         <form onSubmit={handleSave} className="p-6 space-y-4">
-          {/* Exchange Selection */}
           <div>
-            <label className="text-xs font-medium text-slate-300 block mb-1.5">Pilih Bursa / Exchange:</label>
+            <label className="text-[11px] font-semibold text-slate-300 block mb-1.5">Pilih Exchange:</label>
             <div className="grid grid-cols-4 gap-2">
               {[
                 { id: 'binance', name: 'Binance' },
@@ -105,10 +106,10 @@ export function ExchangeSettingsModal({
                   key={ex.id}
                   type="button"
                   onClick={() => setExchange(ex.id)}
-                  className={`py-2 px-3 text-xs font-semibold rounded-lg border transition-all text-center ${
+                  className={`py-2 text-xs font-bold rounded-xl border transition-all text-center ${
                     exchange === ex.id
                       ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                      : 'bg-[#161c28] border-[#1f293d] text-slate-400 hover:text-slate-200'
+                      : 'bg-[#101623] border-white/[0.06] text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   {ex.name}
@@ -117,11 +118,10 @@ export function ExchangeSettingsModal({
             </div>
           </div>
 
-          {/* Testnet Toggle */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-[#161c28] border border-[#1f293d]">
-            <div className="flex flex-col">
-              <span className="text-xs font-medium text-slate-200">Gunakan Testnet / Sandbox Mode</span>
-              <span className="text-[11px] text-slate-400">Gunakan akun demo exchange untuk uji coba tanpa risiko</span>
+          <div className="flex items-center justify-between p-3 rounded-xl bg-[#101623] border border-white/[0.06]">
+            <div>
+              <span className="text-xs font-bold text-slate-200 block">Mode Testnet / Demo</span>
+              <span className="text-[11px] text-slate-400">Gunakan akun simulasi resmi tanpa risiko saldo riil</span>
             </div>
             <input
               type="checkbox"
@@ -131,42 +131,39 @@ export function ExchangeSettingsModal({
             />
           </div>
 
-          {/* API Key */}
           <div>
-            <label className="text-xs font-medium text-slate-300 block mb-1">API Key</label>
+            <label className="text-[11px] font-semibold text-slate-300 block mb-1">API Key</label>
             <input
               type="text"
-              placeholder={liveExchangeInfo.maskedKey ? `Tersimpan (${liveExchangeInfo.maskedKey})` : 'Masukkan API Key Anda'}
+              placeholder={liveExchangeInfo?.maskedKey ? `Tersimpan (${liveExchangeInfo.maskedKey})` : 'Masukkan API Key Anda'}
               value={apiKey}
               onChange={e => setApiKey(e.target.value)}
-              className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+              className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
             />
           </div>
 
-          {/* API Secret */}
           <div>
-            <label className="text-xs font-medium text-slate-300 block mb-1">API Secret</label>
+            <label className="text-[11px] font-semibold text-slate-300 block mb-1">API Secret</label>
             <div className="relative">
               <input
                 type={showSecret ? 'text' : 'password'}
                 placeholder="Masukkan API Secret Anda"
                 value={apiSecret}
                 onChange={e => setApiSecret(e.target.value)}
-                className="w-full bg-[#161c28] border border-[#1f293d] rounded-lg pl-3 pr-10 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                className="w-full glass-input rounded-xl pl-3 pr-10 py-2 text-xs text-white font-mono"
               />
               <button
                 type="button"
                 onClick={() => setShowSecret(!showSecret)}
-                className="absolute right-2.5 top-2 text-slate-400 hover:text-white"
+                className="absolute right-3 top-2.5 text-slate-400 hover:text-white"
               >
                 {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </div>
 
-          {/* Feedback banner */}
           {feedback && (
-            <div className={`p-3 rounded-lg text-xs border ${
+            <div className={`p-3 rounded-xl text-xs border ${
               feedback.type === 'success'
                 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
                 : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
@@ -175,13 +172,12 @@ export function ExchangeSettingsModal({
             </div>
           )}
 
-          {/* Buttons */}
-          <div className="pt-3 border-t border-[#1f293d] flex items-center justify-between">
+          <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
             <button
               type="button"
               onClick={handleTest}
               disabled={testing}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-[#161c28] text-slate-300 border border-[#1f293d] hover:bg-[#1a2232] hover:text-white transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#101623] text-slate-300 border border-white/[0.08] hover:bg-white/[0.05] transition-all disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${testing ? 'animate-spin' : ''}`} />
               Tes Koneksi
@@ -191,14 +187,14 @@ export function ExchangeSettingsModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-[#161c28] transition-colors"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/[0.05] transition-colors"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition-all shadow-md shadow-amber-500/20 disabled:opacity-50"
+                className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50 active:scale-95"
               >
                 Simpan API Key
               </button>

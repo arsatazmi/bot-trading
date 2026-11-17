@@ -1,8 +1,8 @@
 // src/components/BotLogStream.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { Terminal, Trash2, ArrowDownCircle } from 'lucide-react';
+import { Terminal, ArrowDownCircle } from 'lucide-react';
 
-export function BotLogStream({ logs = [], onClearLogs }) {
+export function BotLogStream({ logs = [] }) {
   const [filterLevel, setFilterLevel] = useState('ALL');
   const [autoScroll, setAutoScroll] = useState(true);
   const logContainerRef = useRef(null);
@@ -24,40 +24,41 @@ export function BotLogStream({ logs = [], onClearLogs }) {
   const getBadgeStyle = (level) => {
     switch (level) {
       case 'SIGNAL':
-        return 'text-sky-400 bg-sky-500/10 border-sky-500/20';
+        return 'text-sky-400 bg-sky-500/10 border-sky-500/25';
       case 'ORDER':
-        return 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20';
+        return 'text-indigo-400 bg-indigo-500/10 border-indigo-500/25';
       case 'SUCCESS':
-        return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+        return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25';
       case 'ALERT':
       case 'RISK':
-        return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+        return 'text-amber-400 bg-amber-500/10 border-amber-500/25';
       case 'ERROR':
-        return 'text-rose-400 bg-rose-500/10 border-rose-500/20';
+        return 'text-rose-400 bg-rose-500/10 border-rose-500/25';
       default:
-        return 'text-slate-400 bg-slate-800 border-slate-700';
+        return 'text-slate-400 bg-slate-800/80 border-slate-700/60';
     }
   };
 
   return (
-    <div className="bg-[#121721] rounded-xl border border-[#1f293d] p-3 flex flex-col shadow-lg text-xs h-[320px]">
-      <div className="flex items-center justify-between border-b border-[#1f293d] pb-2 mb-2">
+    <div className="flex flex-col h-[320px]">
+      <div className="flex items-center justify-between pb-3 mb-2 border-b border-white/[0.06]">
         <div className="flex items-center gap-2">
           <Terminal className="h-4 w-4 text-emerald-400" />
-          <span className="font-bold text-slate-200">Log Aktivitas & Sinyal Real-Time</span>
+          <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200">
+            Log Aktivitas Real-Time
+          </h3>
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Filter Pills */}
-          <div className="flex items-center bg-[#161c28] p-0.5 rounded border border-[#1f293d] text-[10px]">
+          <div className="flex items-center bg-[#101623] p-0.5 rounded-xl border border-white/[0.06] text-[10px]">
             {['ALL', 'SIGNAL', 'ORDER', 'ALERT'].map(level => (
               <button
                 key={level}
                 onClick={() => setFilterLevel(level)}
-                className={`px-1.5 py-0.5 rounded font-medium transition-colors ${
+                className={`px-2 py-0.5 rounded-lg font-bold transition-all ${
                   filterLevel === level
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-blue-600 text-white shadow-sm'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -68,7 +69,7 @@ export function BotLogStream({ logs = [], onClearLogs }) {
 
           <button
             onClick={() => setAutoScroll(!autoScroll)}
-            className={`p-1 rounded text-xs transition-colors ${
+            className={`p-1 rounded-lg text-xs transition-colors ${
               autoScroll ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500 hover:text-slate-300'
             }`}
             title="Toggle Auto-Scroll"
@@ -78,23 +79,22 @@ export function BotLogStream({ logs = [], onClearLogs }) {
         </div>
       </div>
 
-      {/* Logs stream body */}
       <div
         ref={logContainerRef}
-        className="flex-1 overflow-y-auto space-y-1.5 font-mono text-[11px] pr-1"
+        className="flex-1 overflow-y-auto space-y-1 font-mono text-[11px] pr-1"
       >
         {filteredLogs.length === 0 ? (
-          <div className="text-slate-600 text-center py-8">
+          <div className="text-slate-600 text-center py-10 font-sans">
             Belum ada log aktivitas yang cocok dengan filter.
           </div>
         ) : (
           filteredLogs.map(log => (
             <div
               key={log.id}
-              className="flex items-start gap-2 p-1.5 rounded hover:bg-[#161c28] transition-colors leading-relaxed border-l-2 border-transparent hover:border-blue-500"
+              className="flex items-start gap-2.5 p-1.5 rounded-lg hover:bg-white/[0.03] transition-colors leading-relaxed"
             >
               <span className="text-slate-500 text-[10px] whitespace-nowrap">{log.time}</span>
-              <span className={`px-1 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider border ${getBadgeStyle(log.level)}`}>
+              <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider border ${getBadgeStyle(log.level)}`}>
                 {log.level}
               </span>
               <span className="text-slate-300 flex-1 break-words">

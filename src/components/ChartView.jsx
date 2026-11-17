@@ -6,7 +6,7 @@ import {
   LineSeries, 
   createSeriesMarkers 
 } from 'lightweight-charts';
-import { Maximize2, Eye, EyeOff, Layers, BarChart2 } from 'lucide-react';
+import { Maximize2, Layers, BarChart3, Activity } from 'lucide-react';
 
 export function ChartView({ 
   candles = [], 
@@ -27,17 +27,16 @@ export function ChartView({
   const rsiSeriesRef = useRef(null);
   const markersRef = useRef(null);
 
-  // Indicators toggle state
+  // Indicators toggle
   const [showEMA, setShowEMA] = useState(true);
   const [showBB, setShowBB] = useState(false);
   const [showRSI, setShowRSI] = useState(true);
   const [timeframe, setTimeframe] = useState('1m');
 
-  // Initialize Main Chart & RSI Subgraph
+  // Chart setup
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Clean up old charts if any
     if (chartRef.current) {
       chartRef.current.remove();
       chartRef.current = null;
@@ -49,14 +48,14 @@ export function ChartView({
 
     const chartOptions = {
       layout: {
-        background: { color: '#121721' },
+        background: { color: '#0d121c' },
         textColor: '#848e9c',
         fontFamily: "'JetBrains Mono', monospace",
         fontSize: 11
       },
       grid: {
-        vertLines: { color: '#1a2232' },
-        horzLines: { color: '#1a2232' }
+        vertLines: { color: 'rgba(255, 255, 255, 0.03)' },
+        horzLines: { color: 'rgba(255, 255, 255, 0.03)' }
       },
       crosshair: {
         mode: 1,
@@ -66,17 +65,17 @@ export function ChartView({
       timeScale: {
         timeVisible: true,
         secondsVisible: false,
-        borderColor: '#1f293d',
+        borderColor: 'rgba(255, 255, 255, 0.08)',
         rightOffset: 12,
-        barSpacing: 10
+        barSpacing: 9
       },
       rightPriceScale: {
-        borderColor: '#1f293d',
+        borderColor: 'rgba(255, 255, 255, 0.08)',
         autoScale: true
       }
     };
 
-    // 1. Create Main Candlestick Chart
+    // Main Chart
     const mainChart = createChart(containerRef.current, {
       ...chartOptions,
       height: 380
@@ -84,12 +83,12 @@ export function ChartView({
     chartRef.current = mainChart;
 
     const candleSeries = mainChart.addSeries(CandlestickSeries, {
-      upColor: '#00c076',
-      downColor: '#ff4d4f',
-      borderUpColor: '#00c076',
-      borderDownColor: '#ff4d4f',
-      wickUpColor: '#00c076',
-      wickDownColor: '#ff4d4f'
+      upColor: '#10b981',
+      downColor: '#f43f5e',
+      borderUpColor: '#10b981',
+      borderDownColor: '#f43f5e',
+      wickUpColor: '#10b981',
+      wickDownColor: '#f43f5e'
     });
     candleSeriesRef.current = candleSeries;
 
@@ -111,9 +110,9 @@ export function ChartView({
     });
     emaSlowSeriesRef.current = emaSlow;
 
-    // Bollinger Upper
+    // Bollinger Bands Upper & Lower
     const bbUpper = mainChart.addSeries(LineSeries, {
-      color: 'rgba(168, 85, 247, 0.6)',
+      color: 'rgba(168, 85, 247, 0.5)',
       lineWidth: 1,
       lineStyle: 2,
       title: 'BB Upper',
@@ -121,9 +120,8 @@ export function ChartView({
     });
     bbUpperSeriesRef.current = bbUpper;
 
-    // Bollinger Lower
     const bbLower = mainChart.addSeries(LineSeries, {
-      color: 'rgba(168, 85, 247, 0.6)',
+      color: 'rgba(168, 85, 247, 0.5)',
       lineWidth: 1,
       lineStyle: 2,
       title: 'BB Lower',
@@ -131,17 +129,17 @@ export function ChartView({
     });
     bbLowerSeriesRef.current = bbLower;
 
-    // 2. Create RSI Subgraph Chart
+    // RSI Subgraph
     if (rsiContainerRef.current) {
       const rsiChart = createChart(rsiContainerRef.current, {
         ...chartOptions,
-        height: 110,
+        height: 100,
         timeScale: {
           ...chartOptions.timeScale,
-          visible: false // hide time axis on subchart to avoid clutter
+          visible: false
         },
         rightPriceScale: {
-          borderColor: '#1f293d',
+          borderColor: 'rgba(255, 255, 255, 0.08)',
           scaleMargins: { top: 0.1, bottom: 0.1 }
         }
       });
@@ -155,43 +153,29 @@ export function ChartView({
       });
       rsiSeriesRef.current = rsiSeries;
 
-      // Overbought 70 guide line
+      // Guides
       rsiChart.addSeries(LineSeries, {
-        color: 'rgba(239, 68, 68, 0.5)',
+        color: 'rgba(244, 63, 94, 0.4)',
         lineWidth: 1,
         lineStyle: 2,
         crosshairMarkerVisible: false
-      }).setData([
-        { time: 0, value: 70 },
-        { time: 2147483647, value: 70 }
-      ]);
+      }).setData([{ time: 0, value: 70 }, { time: 2147483647, value: 70 }]);
 
-      // Oversold 30 guide line
       rsiChart.addSeries(LineSeries, {
-        color: 'rgba(34, 197, 94, 0.5)',
+        color: 'rgba(16, 185, 129, 0.4)',
         lineWidth: 1,
         lineStyle: 2,
         crosshairMarkerVisible: false
-      }).setData([
-        { time: 0, value: 30 },
-        { time: 2147483647, value: 30 }
-      ]);
+      }).setData([{ time: 0, value: 30 }, { time: 2147483647, value: 30 }]);
 
-      // Synchronize time scales
       mainChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
-        if (range && rsiChart) {
-          rsiChart.timeScale().setVisibleLogicalRange(range);
-        }
+        if (range && rsiChart) rsiChart.timeScale().setVisibleLogicalRange(range);
       });
-
       rsiChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
-        if (range && mainChart) {
-          mainChart.timeScale().setVisibleLogicalRange(range);
-        }
+        if (range && mainChart) mainChart.timeScale().setVisibleLogicalRange(range);
       });
     }
 
-    // Handle Window Resize
     const handleResize = () => {
       if (containerRef.current && mainChart) {
         mainChart.applyOptions({ width: containerRef.current.clientWidth });
@@ -211,11 +195,10 @@ export function ChartView({
     };
   }, []);
 
-  // Update Data when candles change
+  // Update Data
   useEffect(() => {
     if (!candleSeriesRef.current || !candles || candles.length === 0) return;
 
-    // Format and sort candles
     const formattedCandles = candles.map(c => ({
       time: c.time,
       open: Number(c.open),
@@ -226,29 +209,26 @@ export function ChartView({
 
     candleSeriesRef.current.setData(formattedCandles);
 
-    // Compute Fast EMA (9)
+    // EMA
     if (emaFastSeriesRef.current) {
       if (showEMA) {
-        const ema9Data = calculateEmaData(formattedCandles, 9);
-        emaFastSeriesRef.current.setData(ema9Data);
+        emaFastSeriesRef.current.setData(calculateEmaData(formattedCandles, 9));
         emaFastSeriesRef.current.applyOptions({ visible: true });
       } else {
         emaFastSeriesRef.current.applyOptions({ visible: false });
       }
     }
 
-    // Compute Slow EMA (21)
     if (emaSlowSeriesRef.current) {
       if (showEMA) {
-        const ema21Data = calculateEmaData(formattedCandles, 21);
-        emaSlowSeriesRef.current.setData(ema21Data);
+        emaSlowSeriesRef.current.setData(calculateEmaData(formattedCandles, 21));
         emaSlowSeriesRef.current.applyOptions({ visible: true });
       } else {
         emaSlowSeriesRef.current.applyOptions({ visible: false });
       }
     }
 
-    // Compute Bollinger Bands (20, 2)
+    // BB
     if (bbUpperSeriesRef.current && bbLowerSeriesRef.current) {
       if (showBB) {
         const { upper, lower } = calculateBollingerData(formattedCandles, 20, 2);
@@ -262,15 +242,14 @@ export function ChartView({
       }
     }
 
-    // Compute RSI Series (14)
+    // RSI
     if (rsiSeriesRef.current && rsiChartRef.current) {
       if (showRSI) {
-        const rsiData = calculateRsiData(formattedCandles, 14);
-        rsiSeriesRef.current.setData(rsiData);
+        rsiSeriesRef.current.setData(calculateRsiData(formattedCandles, 14));
       }
     }
 
-    // Update Markers
+    // Markers
     if (markers && markers.length > 0 && candleSeriesRef.current) {
       try {
         const sortedMarkers = [...markers]
@@ -288,19 +267,15 @@ export function ChartView({
         } else {
           markersRef.current.setMarkers(sortedMarkers);
         }
-      } catch (err) {
-        // ignore marker errors silently
-      }
+      } catch (err) {}
     }
   }, [candles, markers, showEMA, showBB, showRSI]);
 
-  // Indicator Calculations
   function calculateEmaData(candleList, period) {
     if (candleList.length < period) return [];
     const k = 2 / (period + 1);
     let ema = candleList.slice(0, period).reduce((sum, c) => sum + c.close, 0) / period;
     const res = [{ time: candleList[period - 1].time, value: +ema.toFixed(2) }];
-
     for (let i = period; i < candleList.length; i++) {
       ema = candleList[i].close * k + ema * (1 - k);
       res.push({ time: candleList[i].time, value: +ema.toFixed(2) });
@@ -312,33 +287,25 @@ export function ChartView({
     if (candleList.length < period) return { upper: [], lower: [] };
     const upper = [];
     const lower = [];
-
     for (let i = period - 1; i < candleList.length; i++) {
       const slice = candleList.slice(i - period + 1, i + 1);
       const mean = slice.reduce((sum, c) => sum + c.close, 0) / period;
       const variance = slice.reduce((acc, c) => acc + Math.pow(c.close - mean, 2), 0) / period;
       const stdDev = Math.sqrt(variance);
-
       upper.push({ time: candleList[i].time, value: +(mean + mult * stdDev).toFixed(2) });
       lower.push({ time: candleList[i].time, value: +(mean - mult * stdDev).toFixed(2) });
     }
-
     return { upper, lower };
   }
 
   function calculateRsiData(candleList, period = 14) {
     if (candleList.length <= period) return [];
     const result = [];
-
-    let gains = 0;
-    let losses = 0;
-
+    let gains = 0, losses = 0;
     for (let i = 1; i <= period; i++) {
       const diff = candleList[i].close - candleList[i - 1].close;
-      if (diff >= 0) gains += diff;
-      else losses += Math.abs(diff);
+      if (diff >= 0) gains += diff; else losses += Math.abs(diff);
     }
-
     let avgGain = gains / period;
     let avgLoss = losses / period;
 
@@ -351,107 +318,107 @@ export function ChartView({
         avgGain = (avgGain * (period - 1)) / period;
         avgLoss = (avgLoss * (period - 1) + Math.abs(diff)) / period;
       }
-
       const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
-      const rsi = +(100 - (100 / (1 + rs))).toFixed(2);
-      result.push({ time: candleList[i].time, value: rsi });
+      result.push({ time: candleList[i].time, value: +(100 - (100 / (1 + rs))).toFixed(2) });
     }
-
     return result;
   }
 
   const handleResetZoom = () => {
-    if (chartRef.current) {
-      chartRef.current.timeScale().fitContent();
-    }
+    if (chartRef.current) chartRef.current.timeScale().fitContent();
   };
 
   return (
-    <div className="bg-[#121721] rounded-xl border border-[#1f293d] overflow-hidden flex flex-col shadow-lg">
-      {/* Chart Toolbar */}
-      <div className="px-4 py-2 border-b border-[#1f293d] flex flex-wrap items-center justify-between gap-3 bg-[#151b27]">
+    <div className="glass-panel rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+      {/* Chart Header Toolbar */}
+      <div className="px-4 py-2.5 border-b border-white/[0.06] flex flex-wrap items-center justify-between gap-3 bg-[#0c101b]/80">
         {/* Left: Timeframe pills */}
-        <div className="flex items-center gap-1">
-          {['1m', '5m', '15m', '1h'].map(tf => (
-            <button
-              key={tf}
-              onClick={() => setTimeframe(tf)}
-              className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
-                timeframe === tf
-                  ? 'bg-blue-600 text-white font-semibold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-[#1f293d]'
-              }`}
-            >
-              {tf}
-            </button>
-          ))}
-          <div className="h-4 w-px bg-[#1f293d] mx-1" />
-          <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5 pl-1">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-            {activeSymbol} Live Chart
-          </span>
+        <div className="flex items-center gap-1.5">
+          <div className="flex bg-white/[0.04] p-0.5 rounded-xl border border-white/[0.06]">
+            {['1m', '5m', '15m', '1h'].map(tf => (
+              <button
+                key={tf}
+                onClick={() => setTimeframe(tf)}
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                  timeframe === tf
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {tf}
+              </button>
+            ))}
+          </div>
+
+          <div className="h-4 w-px bg-white/[0.08] mx-1 hidden sm:block" />
+
+          <div className="text-xs font-bold text-slate-200 flex items-center gap-1.5 pl-1">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>{activeSymbol} Live Chart</span>
+          </div>
         </div>
 
         {/* Right: Technical Indicator Toggles */}
-        <div className="flex items-center gap-2">
-          {/* EMA Toggle */}
+        <div className="flex items-center gap-1.5">
+          {/* EMA */}
           <button
             onClick={() => setShowEMA(!showEMA)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border transition-all ${
               showEMA
                 ? 'bg-sky-500/15 border-sky-500/40 text-sky-400'
-                : 'bg-[#1a2232] border-[#1f293d] text-slate-500 hover:text-slate-400'
+                : 'bg-white/[0.02] border-white/[0.05] text-slate-400 hover:text-slate-300'
             }`}
             title="Toggle EMA 9 & EMA 21"
           >
             <Layers className="h-3.5 w-3.5" />
-            EMA (9/21)
+            <span>EMA (9/21)</span>
           </button>
 
-          {/* Bollinger Bands Toggle */}
+          {/* Bollinger Bands */}
           <button
             onClick={() => setShowBB(!showBB)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border transition-all ${
               showBB
-                ? 'bg-purple-500/15 border-purple-500/40 text-purple-400'
-                : 'bg-[#1a2232] border-[#1f293d] text-slate-500 hover:text-slate-400'
+                ? 'bg-purple-500/15 border-purple-500/40 text-purple-300'
+                : 'bg-white/[0.02] border-white/[0.05] text-slate-400 hover:text-slate-300'
             }`}
-            title="Toggle Bollinger Bands (20, 2)"
+            title="Toggle Bollinger Bands"
           >
-            BB (20, 2)
+            <span>BB (20, 2)</span>
           </button>
 
-          {/* RSI Toggle */}
+          {/* RSI */}
           <button
             onClick={() => setShowRSI(!showRSI)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border transition-all ${
               showRSI
                 ? 'bg-purple-600/20 border-purple-500/40 text-purple-300'
-                : 'bg-[#1a2232] border-[#1f293d] text-slate-500 hover:text-slate-400'
+                : 'bg-white/[0.02] border-white/[0.05] text-slate-400 hover:text-slate-300'
             }`}
             title="Toggle RSI Subchart"
           >
-            <BarChart2 className="h-3.5 w-3.5" />
-            RSI 14
+            <BarChart3 className="h-3.5 w-3.5" />
+            <span>RSI 14</span>
           </button>
 
-          {/* Fit view */}
+          {/* Fit zoom */}
           <button
             onClick={handleResetZoom}
-            className="p-1 rounded text-slate-400 hover:text-white hover:bg-[#1f293d] transition-colors"
-            title="Reset Zoom / Fit Chart"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.05] transition-colors"
+            title="Fit to Window"
           >
-            <Maximize2 className="h-4 w-4" />
+            <Maximize2 className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
 
-      {/* Main Candlestick Chart Container */}
-      <div className="relative w-full">
+      {/* Main Chart Body */}
+      <div className="relative w-full bg-[#0d121c]">
         <div ref={containerRef} className="w-full" style={{ height: 380 }} />
-        {/* Visual indicators legend */}
+        
+        {/* Floating Indicator Legend */}
         {showEMA && (
-          <div className="absolute top-2 left-3 z-10 flex items-center gap-3 text-[11px] font-mono bg-[#121721]/80 backdrop-blur px-2 py-0.5 rounded border border-[#1f293d]/50 pointer-events-none">
+          <div className="absolute top-3 left-4 z-10 flex items-center gap-3 text-[11px] font-mono bg-[#0c101b]/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/[0.06] pointer-events-none">
             <span className="text-sky-400 flex items-center gap-1">
               <span className="h-1.5 w-3 bg-sky-400 inline-block rounded" />
               EMA 9
@@ -464,13 +431,13 @@ export function ChartView({
         )}
       </div>
 
-      {/* RSI Subgraph Container */}
+      {/* Synchronized RSI Pane */}
       {showRSI && (
-        <div className="border-t border-[#1f293d] relative bg-[#0f141f]">
-          <div className="absolute top-1 left-3 z-10 text-[10px] font-mono text-purple-400 font-semibold pointer-events-none">
-            RSI (14) — Overbought [70] / Oversold [30]
+        <div className="border-t border-white/[0.06] relative bg-[#090d16]">
+          <div className="absolute top-1.5 left-4 z-10 text-[10px] font-mono text-purple-400 font-semibold pointer-events-none">
+            RSI 14 — Overbought [70] / Oversold [30]
           </div>
-          <div ref={rsiContainerRef} className="w-full" style={{ height: 110 }} />
+          <div ref={rsiContainerRef} className="w-full" style={{ height: 100 }} />
         </div>
       )}
     </div>

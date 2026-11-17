@@ -54,7 +54,6 @@ export function App() {
           activeSymbolRef.current = res.data.activeSymbol;
           setCandles(res.data.candles || []);
         } else {
-          // Fallback to clientEngine directly
           const fallback = clientEngine.getFullState();
           setAppState(fallback);
           activeSymbolRef.current = fallback.activeSymbol;
@@ -73,7 +72,7 @@ export function App() {
     loadInitial();
   }, []);
 
-  // Real-Time Event Streaming (SSE with Client-Engine fallback)
+  // Real-Time Event Streaming
   useEffect(() => {
     let eventSource = null;
     let fallbackCleanup = null;
@@ -197,7 +196,7 @@ export function App() {
     activeSymbolRef.current = symbol;
     try {
       const res = await setBotSymbol(symbol);
-      if (res.success) {
+      if (res && res.success) {
         setAppState(prev => ({ ...prev, activeSymbol: symbol }));
         const candleRes = await fetchCandles(symbol, 180);
         if (candleRes && candleRes.candles) {
@@ -330,9 +329,9 @@ export function App() {
 
   if (loading || !appState) {
     return (
-      <div className="min-h-screen bg-[#0b0e14] flex flex-col items-center justify-center text-slate-300">
+      <div className="min-h-screen bg-[#07090e] flex flex-col items-center justify-center text-slate-300">
         <div className="h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <span className="font-semibold text-sm">Menyiapkan AutoTrade Pro Engine...</span>
+        <span className="font-semibold text-sm">Menyiapkan AutoTrade Pro...</span>
       </div>
     );
   }
@@ -346,7 +345,7 @@ export function App() {
   const markers = appState.tradeMarkers || [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0e14] text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#07090e] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(37,99,235,0.08),rgba(255,255,255,0))] text-slate-100 selection:bg-blue-600 selection:text-white">
       {/* 1. Header Navbar */}
       <Navbar
         status={appState.status}
@@ -373,8 +372,8 @@ export function App() {
       />
 
       {/* 3. Main Dashboard Workspace */}
-      <main className="flex-1 max-w-[1920px] w-full mx-auto p-4 space-y-4">
-        {/* Performance Metrics Row */}
+      <main className="flex-1 max-w-[1920px] w-full mx-auto p-4 lg:p-6 space-y-4">
+        {/* Performance Metrics KPI Strip */}
         <PerformanceMetrics portfolio={appState.portfolio} />
 
         {/* Primary Interactive Section */}
@@ -390,54 +389,54 @@ export function App() {
             />
 
             {/* Bottom Tabbed Area (Positions, History, Logs) */}
-            <div className="bg-[#121721] rounded-xl border border-[#1f293d] overflow-hidden shadow-lg">
+            <div className="glass-panel rounded-2xl overflow-hidden shadow-2xl">
               {/* Tab Navigation Header */}
-              <div className="flex items-center justify-between border-b border-[#1f293d] px-4 pt-2 bg-[#151b27]">
+              <div className="flex items-center justify-between border-b border-white/[0.06] px-5 pt-3 bg-[#0c101b]/60">
                 <div className="flex gap-2">
                   <button
                     onClick={() => setActiveTab('positions')}
-                    className={`px-4 py-2.5 text-xs font-bold rounded-t-lg transition-all border-b-2 flex items-center gap-1.5 ${
+                    className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2 ${
                       activeTab === 'positions'
-                        ? 'border-blue-500 text-blue-400 bg-[#121721]'
+                        ? 'border-blue-500 text-blue-400 bg-white/[0.03]'
                         : 'border-transparent text-slate-400 hover:text-slate-200'
                     }`}
                   >
                     <span>Posisi Terbuka</span>
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-800 text-slate-300">
+                    <span className="px-2 py-0.2 rounded-full text-[10px] bg-white/[0.06] text-slate-300 font-mono">
                       {positions.length}
                     </span>
                   </button>
 
                   <button
                     onClick={() => setActiveTab('history')}
-                    className={`px-4 py-2.5 text-xs font-bold rounded-t-lg transition-all border-b-2 flex items-center gap-1.5 ${
+                    className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2 ${
                       activeTab === 'history'
-                        ? 'border-blue-500 text-blue-400 bg-[#121721]'
+                        ? 'border-blue-500 text-blue-400 bg-white/[0.03]'
                         : 'border-transparent text-slate-400 hover:text-slate-200'
                     }`}
                   >
                     <span>Riwayat Transaksi</span>
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-800 text-slate-300">
+                    <span className="px-2 py-0.2 rounded-full text-[10px] bg-white/[0.06] text-slate-300 font-mono">
                       {trades.length}
                     </span>
                   </button>
 
                   <button
                     onClick={() => setActiveTab('logs')}
-                    className={`px-4 py-2.5 text-xs font-bold rounded-t-lg transition-all border-b-2 flex items-center gap-1.5 ${
+                    className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2 ${
                       activeTab === 'logs'
-                        ? 'border-blue-500 text-blue-400 bg-[#121721]'
+                        ? 'border-blue-500 text-blue-400 bg-white/[0.03]'
                         : 'border-transparent text-slate-400 hover:text-slate-200'
                     }`}
                   >
                     <span>Log Aktivitas</span>
-                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
                   </button>
                 </div>
               </div>
 
               {/* Tab Contents */}
-              <div className="p-3">
+              <div className="p-4">
                 {activeTab === 'positions' && (
                   <ActivePositions
                     positions={positions}
@@ -479,11 +478,6 @@ export function App() {
               orderBook={activeSnapshot.orderBook}
               symbol={activeSymbol}
             />
-
-            {/* Quick Live Terminal Log Preview */}
-            <div className="hidden xl:block">
-              <BotLogStream logs={logs} />
-            </div>
           </div>
         </div>
       </main>
