@@ -15,15 +15,19 @@ export class TelegramService {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (!parsed.botToken) {
+          parsed.botToken = '7650747217:AAGhWU3S0qtgpTD77n3tMTF9_o1bhQXO27c';
+        }
+        return parsed;
       }
     } catch (e) {}
 
     return {
-      botToken: '',
+      botToken: '7650747217:AAGhWU3S0qtgpTD77n3tMTF9_o1bhQXO27c',
       chatId: '',
       botUsername: '@SmartAIAnalytics_bot',
-      enabled: false,
+      enabled: true,
       notifyBuy: true,
       notifySell: true,
       notifyDaily: true,
@@ -59,6 +63,40 @@ export class TelegramService {
       }
     } catch (err) {
       throw new Error(`Verifikasi bot gagal: ${err.message}`);
+    }
+  }
+
+  async detectChatId(token = null) {
+    const t = token || this.config.botToken;
+    if (!t) throw new Error('Token bot diperlukan');
+    try {
+      const res = await fetch(`https://api.telegram.org/bot${t}/getUpdates`);
+      const data = await res.json();
+      if (!data.ok) {
+        throw new Error(data.description || 'Gagal membaca pembaruan dari Telegram.');
+      }
+      const updates = data.result || [];
+      if (updates.length === 0) {
+        throw new Error('Belum ada pesan yang masuk ke bot ini. Buka bot Anda di Telegram (@SmartAIAnalytics_bot), klik Start atau kirim pesan "halo", lalu klik tombol ini lagi.');
+      }
+
+      for (let i = updates.length - 1; i >= 0; i--) {
+        const u = updates[i];
+        const chat = u.message?.chat || u.channel_post?.chat || u.my_chat_member?.chat || u.callback_query?.message?.chat;
+        if (chat && chat.id) {
+          const senderName = u.message?.from?.first_name || chat.first_name || chat.title || 'Trader';
+          return {
+            success: true,
+            chatId: String(chat.id),
+            senderName,
+            username: chat.username ? `@${chat.username}` : ''
+          };
+        }
+      }
+
+      throw new Error('Tidak menemukan Chat ID dari obrolan terbaru. Coba kirim pesan lagi ke bot Anda di Telegram.');
+    } catch (err) {
+      throw new Error(err.message);
     }
   }
 

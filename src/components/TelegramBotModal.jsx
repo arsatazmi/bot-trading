@@ -13,7 +13,10 @@ import {
   Sparkles,
   RefreshCw,
   Copy,
-  Check
+  Check,
+  Eye,
+  EyeOff,
+  MessageSquare
 } from 'lucide-react';
 import { telegramService } from '../services/telegramService.js';
 
@@ -21,6 +24,8 @@ export function TelegramBotModal({ isOpen, onClose, portfolio = {}, status = 'RU
   const [config, setConfig] = useState(telegramService.config);
   const [testing, setTesting] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
+  const [detectingChatId, setDetectingChatId] = useState(false);
+  const [showToken, setShowToken] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [copied, setCopied] = useState(false);
 
@@ -29,6 +34,30 @@ export function TelegramBotModal({ isOpen, onClose, portfolio = {}, status = 'RU
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const handleAutoDetectChatId = async () => {
+    setDetectingChatId(true);
+    setFeedback(null);
+    try {
+      const res = await telegramService.detectChatId(config.botToken);
+      if (res && res.chatId) {
+        const updated = { ...config, chatId: res.chatId, enabled: true };
+        setConfig(updated);
+        telegramService.saveConfig(updated);
+        setFeedback({
+          type: 'success',
+          message: `Berhasil mendeteksi Chat ID: ${res.chatId} (${res.senderName})! Bot telah terhubung.`
+        });
+      }
+    } catch (err) {
+      setFeedback({
+        type: 'error',
+        message: err.message
+      });
+    } finally {
+      setDetectingChatId(false);
+    }
+  };
 
   const handleSave = (e) => {
     e.preventDefault();
@@ -144,12 +173,30 @@ export function TelegramBotModal({ isOpen, onClose, portfolio = {}, status = 'RU
           {/* Quick Guide Card */}
           <div className="p-3.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-xs text-sky-300 flex items-start gap-3">
             <Sparkles className="h-5 w-5 text-sky-400 flex-shrink-0 mt-0.5" />
-            <div className="leading-relaxed text-[11px]">
-              <span className="font-bold block mb-0.5">Cara Menghubungkan dalam 1 Menit:</span>
-              1. Buka Telegram dan cari <strong>@BotFather</strong>, ketik <code>/newbot</code> untuk membuat bot baru Anda (misal nama: <code>SmartAIAnalytics_bot</code>).<br />
-              2. Salin <strong>HTTP API Token</strong> yang diberikan ke form di bawah.<br />
-              3. Kirim pesan apa saja ke bot Anda, lalu masukkan <strong>Chat ID</strong> Anda (bisa cek via <code>@userinfobot</code> di Telegram).
+            <div className="leading-relaxed text-[11px] space-y-1">
+              <span className="font-bold block text-white">Panduan Cepat Menghubungkan @SmartAIAnalytics_bot:</span>
+              <p>
+                1. Klik tombol <strong>Buka Bot Telegram</strong> di bawah atau cari <a href="https://t.me/SmartAIAnalytics_bot" target="_blank" rel="noreferrer" className="underline font-semibold text-sky-200">@SmartAIAnalytics_bot</a> di aplikasi Telegram Anda.
+              </p>
+              <p>
+                2. Tekan <strong>START</strong> atau kirim pesan apa saja (misal: <code>/start</code> atau <code>halo</code>).
+              </p>
+              <p>
+                3. Klik tombol <strong>⚡ Deteksi Chat ID Otomatis</strong> di bawah. Bot akan langsung terhubung ke akun Anda!
+              </p>
             </div>
+          </div>
+
+          <div className="flex gap-2">
+            <a
+              href="https://t.me/SmartAIAnalytics_bot"
+              target="_blank"
+              rel="noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 font-semibold text-xs transition-colors"
+            >
+              <MessageSquare className="h-4 w-4" />
+              Buka @SmartAIAnalytics_bot di Telegram <ExternalLink className="h-3 w-3" />
+            </a>
           </div>
 
           {/* Form */}
@@ -157,19 +204,22 @@ export function TelegramBotModal({ isOpen, onClose, portfolio = {}, status = 'RU
             {/* Bot Token */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-[11px] font-semibold text-slate-300">Telegram Bot Token</label>
-                <a
-                  href="https://t.me/BotFather"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[10px] text-sky-400 hover:text-sky-300 flex items-center gap-1 font-medium"
+                <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+                  <span>Telegram Bot Token</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-normal">Pre-configured</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowToken(!showToken)}
+                  className="text-[10px] text-slate-400 hover:text-white flex items-center gap-1 font-medium"
                 >
-                  Buka @BotFather <ExternalLink className="h-2.5 w-2.5" />
-                </a>
+                  {showToken ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                  {showToken ? 'Sembunyikan' : 'Lihat Token'}
+                </button>
               </div>
               <input
-                type="password"
-                placeholder="Contoh: 7123456789:AAFlkB... (dari @BotFather)"
+                type={showToken ? 'text' : 'password'}
+                placeholder="Token bot Telegram"
                 value={config.botToken}
                 onChange={e => setConfig({ ...config, botToken: e.target.value })}
                 className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
@@ -186,16 +236,28 @@ export function TelegramBotModal({ isOpen, onClose, portfolio = {}, status = 'RU
                   rel="noreferrer"
                   className="text-[10px] text-sky-400 hover:text-sky-300 flex items-center gap-1 font-medium"
                 >
-                  Cek ID di @userinfobot <ExternalLink className="h-2.5 w-2.5" />
+                  Cek manual di @userinfobot <ExternalLink className="h-2.5 w-2.5" />
                 </a>
               </div>
-              <input
-                type="text"
-                placeholder="Contoh: 123456789 (ID Telegram akun Anda)"
-                value={config.chatId}
-                onChange={e => setConfig({ ...config, chatId: e.target.value })}
-                className="w-full glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Ketik manual atau klik deteksi otomatis..."
+                  value={config.chatId}
+                  onChange={e => setConfig({ ...config, chatId: e.target.value })}
+                  className="flex-1 glass-input rounded-xl px-3 py-2 text-xs text-white font-mono"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAutoDetectChatId}
+                disabled={detectingChatId || !config.botToken}
+                className="mt-2 w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-gradient-to-r from-sky-600/30 via-blue-600/30 to-sky-600/30 hover:from-sky-600/40 hover:to-blue-600/40 border border-sky-500/40 text-sky-200 font-semibold text-xs transition-all shadow-sm disabled:opacity-50"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 text-sky-400 ${detectingChatId ? 'animate-spin' : ''}`} />
+                {detectingChatId ? 'Mendeteksi pesan dari Telegram...' : '⚡ Ambil Chat ID Otomatis (Setelah kirim pesan ke bot)'}
+              </button>
             </div>
 
             {/* Notification Checkboxes */}
