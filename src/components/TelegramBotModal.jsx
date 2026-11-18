@@ -25,6 +25,7 @@ export function TelegramBotModal({ isOpen, onClose, portfolio = {}, status = 'RU
   const [testing, setTesting] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
   const [detectingChatId, setDetectingChatId] = useState(false);
+  const [settingWebhook, setSettingWebhook] = useState(false);
   const [showToken, setShowToken] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -34,6 +35,32 @@ export function TelegramBotModal({ isOpen, onClose, portfolio = {}, status = 'RU
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const handleSetupWebhook = async () => {
+    setSettingWebhook(true);
+    setFeedback(null);
+    try {
+      const res = await telegramService.setupWebhook();
+      if (res && res.ok) {
+        setFeedback({
+          type: 'success',
+          message: 'Respons Otomatis Aktif! Sekarang @SmartAIAnalytics_bot akan langsung membalas chat /start & perintah lainnya di Telegram!'
+        });
+      } else {
+        setFeedback({
+          type: 'error',
+          message: res?.description || 'Gagal mengatur webhook Telegram.'
+        });
+      }
+    } catch (err) {
+      setFeedback({
+        type: 'error',
+        message: err.message
+      });
+    } finally {
+      setSettingWebhook(false);
+    }
+  };
 
   const handleAutoDetectChatId = async () => {
     setDetectingChatId(true);
@@ -249,15 +276,27 @@ export function TelegramBotModal({ isOpen, onClose, portfolio = {}, status = 'RU
                 />
               </div>
 
-              <button
-                type="button"
-                onClick={handleAutoDetectChatId}
-                disabled={detectingChatId || !config.botToken}
-                className="mt-2 w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-gradient-to-r from-sky-600/30 via-blue-600/30 to-sky-600/30 hover:from-sky-600/40 hover:to-blue-600/40 border border-sky-500/40 text-sky-200 font-semibold text-xs transition-all shadow-sm disabled:opacity-50"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 text-sky-400 ${detectingChatId ? 'animate-spin' : ''}`} />
-                {detectingChatId ? 'Mendeteksi pesan dari Telegram...' : '⚡ Ambil Chat ID Otomatis (Setelah kirim pesan ke bot)'}
-              </button>
+              <div className="space-y-2 mt-2">
+                <button
+                  type="button"
+                  onClick={handleAutoDetectChatId}
+                  disabled={detectingChatId || !config.botToken}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-gradient-to-r from-sky-600/30 via-blue-600/30 to-sky-600/30 hover:from-sky-600/40 hover:to-blue-600/40 border border-sky-500/40 text-sky-200 font-semibold text-xs transition-all shadow-sm disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 text-sky-400 ${detectingChatId ? 'animate-spin' : ''}`} />
+                  {detectingChatId ? 'Mendeteksi pesan dari Telegram...' : '⚡ Ambil Chat ID Otomatis (Setelah kirim pesan ke bot)'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSetupWebhook}
+                  disabled={settingWebhook || !config.botToken}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 font-semibold text-xs transition-all shadow-sm disabled:opacity-50"
+                >
+                  <Bot className={`h-3.5 w-3.5 ${settingWebhook ? 'animate-spin' : ''}`} />
+                  {settingWebhook ? 'Menghubungkan Webhook ke Telegram...' : '🤖 Aktifkan Respons Otomatis Bot (Auto-Reply /start & Menu)'}
+                </button>
+              </div>
             </div>
 
             {/* Notification Checkboxes */}

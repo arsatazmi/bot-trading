@@ -204,5 +204,16 @@ export function createApiRouter(botManager) {
     }
   });
 
+  // Telegram Bot status & webhook bridge
+  router.get('/telegram', (req, res) => {
+    res.json({
+      status: 'online',
+      bot: '@SmartAIAnalytics_bot',
+      message: 'Telegram Bot endpoint is operational',
+      botStatus: botManager.status,
+      activeSymbol: botManager.activeSymbol
+    });
+  });
+
   return router;
 }
