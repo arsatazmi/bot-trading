@@ -12,7 +12,9 @@ import { BotLogStream } from './components/BotLogStream.jsx';
 import { StrategyConfigModal } from './components/StrategyConfigModal.jsx';
 import { ExchangeSettingsModal } from './components/ExchangeSettingsModal.jsx';
 import { ManualOrderModal } from './components/ManualOrderModal.jsx';
+import { TelegramBotModal } from './components/TelegramBotModal.jsx';
 import { clientEngine } from './services/clientBotEngine.js';
+import { telegramService } from './services/telegramService.js';
 
 import {
   fetchState,
@@ -41,6 +43,7 @@ export function App() {
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
   const [manualOrderModalOpen, setManualOrderModalOpen] = useState(false);
+  const [telegramModalOpen, setTelegramModalOpen] = useState(false);
 
   const activeSymbolRef = useRef('BTC/USDT');
 
@@ -360,6 +363,8 @@ export function App() {
         onPanicClose={handlePanicClose}
         hasOpenPositions={positions.length > 0}
         isLiveExchangeConnected={appState.liveExchange?.isConnected}
+        isTelegramConnected={telegramService.isConnected()}
+        onOpenTelegramModal={() => setTelegramModalOpen(true)}
       />
 
       {/* 2. Ticker Bar with Multi-Asset Switching */}
@@ -510,6 +515,14 @@ export function App() {
         activeSymbol={activeSymbol}
         currentPrice={currentPrice}
         onSubmitOrder={handleManualOrder}
+      />
+
+      <TelegramBotModal
+        isOpen={telegramModalOpen}
+        onClose={() => setTelegramModalOpen(false)}
+        portfolio={appState.portfolio}
+        status={appState.status}
+        activeSymbol={activeSymbol}
       />
     </div>
   );

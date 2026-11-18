@@ -1,6 +1,8 @@
 // src/services/clientBotEngine.js
 // Client-side fallback Bot Engine for static hosting (Vercel, Netlify, etc.)
 
+import { telegramService } from './telegramService.js';
+
 export class ClientBotEngine {
   constructor() {
     this.symbols = {
@@ -359,6 +361,16 @@ export class ClientBotEngine {
     this.positions.push(pos);
     this.addLog('ORDER', `Order BUY Sukses: ${amount} ${symbol} @ $${price} | TP: $${takeProfit || '--'} | SL: $${stopLoss || '--'}`);
 
+    // Dispatch Telegram Alert
+    telegramService.notifySignalBuy({
+      symbol,
+      price,
+      amount,
+      stopLoss,
+      takeProfit,
+      strategy: strategyName
+    });
+
     const marker = {
       time: Math.floor(Date.now() / 1000),
       position: 'belowBar',
@@ -409,6 +421,17 @@ export class ClientBotEngine {
     const isWin = realizedPnL >= 0;
     this.addLog(isWin ? 'SUCCESS' : 'ALERT', `Posisi ditutup (${reason}): ${pos.symbol} @ $${exitPrice}. PnL: ${isWin ? '+' : ''}$${realizedPnL} (${pnlPercent}%)`);
 
+    // Dispatch Telegram Alert
+    telegramService.notifyPositionClosed({
+      symbol: pos.symbol,
+      exitPrice,
+      entryPrice: pos.entryPrice,
+      realizedPnL,
+      pnlPercent,
+      reason,
+      strategy: pos.strategy
+    });
+
     this.recordMarker({
       time: Math.floor(Date.now() / 1000),
       position: 'aboveBar',
@@ -427,6 +450,7 @@ export class ClientBotEngine {
     }
     this.status = 'PAUSED';
     this.addLog('ALERT', '🚨 EMERGENCY CLOSE: Seluruh posisi telah dilikuidasi di harga pasar! Bot dijeda.');
+    telegramService.notifyPanicClose(list.length);
     return { success: true, closedCount: list.length };
   }
 

@@ -24,10 +24,12 @@ export function Navbar({
   onOpenSettings,
   onOpenStrategyModal,
   onOpenManualOrder,
+  onOpenTelegramModal,
   onResetBalance,
   onPanicClose,
   hasOpenPositions,
-  isLiveExchangeConnected
+  isLiveExchangeConnected,
+  isTelegramConnected
 }) {
   const isRunning = status === 'RUNNING';
   const isPaused = status === 'PAUSED';
@@ -142,6 +144,24 @@ export function Navbar({
           >
             <Settings2 className="h-3.5 w-3.5 text-cyan-400" />
             <span className="hidden md:inline">Strategi</span>
+          </button>
+
+          {/* Telegram Bot Modal Button */}
+          <button
+            onClick={onOpenTelegramModal}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl border transition-all active:scale-95 ${
+              isTelegramConnected
+                ? 'bg-sky-500/15 border-sky-500/35 text-sky-400 shadow-sm shadow-sky-500/10'
+                : 'bg-[#101623] text-slate-300 border-white/[0.08] hover:bg-white/[0.05] hover:text-white'
+            }`}
+            title="Integrasi Telegram Bot (@SmartAIAnalytics_bot)"
+          >
+            <Send className="h-3.5 w-3.5 text-sky-400 -ml-0.5" />
+            <span className="hidden lg:inline">@SmartAIAnalytics_bot</span>
+            <span className="lg:hidden">Telegram</span>
+            {isTelegramConnected && (
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            )}
           </button>
 
           {/* Exchange API Key Modal Button */}
