@@ -1,0 +1,41 @@
+{
+  "name": "bot-trading",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node server/index.js",
+    "build": "vite build",
+    "start": "NODE_ENV=production node server/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arsatazmi/bot-trading.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/arsatazmi/bot-trading/issues"
+  },
+  "homepage": "https://github.com/arsatazmi/bot-trading#readme",
+  "dependencies": {
+    "ccxt": "^4.5.92",
+    "cors": "^2.8.6",
+    "express": "^5.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.5",
+    "@tailwindcss/vite": "^4.3.5",
+    "@vitejs/plugin-react": "^6.3.0",
+    "autoprefixer": "^10.6.2",
+    "lightweight-charts": "^5.3.0",
+    "lucide-react": "^1.73.0",
+    "postcss": "^8.5.33",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tailwindcss": "^4.3.5",
+    "vite": "^8.3.8"
+  },
+  "type": "module"
+}
